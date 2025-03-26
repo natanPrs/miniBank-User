@@ -1,5 +1,6 @@
 package com.user.controllers
 
+import com.user.dtos.TransactionDto
 import com.user.dtos.UserDto
 import com.user.models.UserModel
 import com.user.services.UserService
@@ -30,5 +31,11 @@ class UserController(private val userService: UserService) {
     fun deleteUser(@PathVariable document: String): ResponseEntity<String> {
         userService.deleteUser(document)
         return ResponseEntity("User has been deleted!", HttpStatus.OK)
+    }
+
+    @PostMapping("/transaction")
+    fun receiveTransactionsData(@RequestBody transactionDto: TransactionDto): ResponseEntity<String> {
+        userService.validateTransaction(transactionDto)
+        return ResponseEntity("arroz", HttpStatus.CREATED)
     }
 }
