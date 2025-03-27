@@ -1,5 +1,6 @@
 package com.user.controllers
 
+import com.user.dtos.ResponseTransactionDto
 import com.user.dtos.TransactionDto
 import com.user.dtos.UserDto
 import com.user.models.UserModel
@@ -34,8 +35,7 @@ class UserController(private val userService: UserService) {
     }
 
     @PostMapping("/transaction")
-    fun receiveTransactionsData(@RequestBody transactionDto: TransactionDto): ResponseEntity<String> {
-        userService.validateTransaction(transactionDto)
-        return ResponseEntity("arroz", HttpStatus.CREATED)
+    fun receiveTransactionsData(@RequestBody transactionDto: TransactionDto): ResponseTransactionDto {
+        return userService.validateTransaction(transactionDto)
     }
 }
