@@ -1,8 +1,10 @@
 package com.user.services
 
-import com.user.dtos.EmailDto
+import com.user.dtos.ResponseTransactionDto
 import com.user.dtos.TransactionDto
 import com.user.dtos.UserDto
+import com.user.exceptions.InsufficientBalanceException
+import com.user.exceptions.UserNotFoundException
 import com.user.mapper.toUserEntity
 import com.user.models.UserModel
 import com.user.producer.UserProducer
@@ -26,19 +28,29 @@ class UserService(
 
     @Transactional
     fun deleteUser(document: String) {
-        val userToDelete = userRepository.findUserByDocument(document) ?: throw Exception("User not found.")
+        val userToDelete = userRepository.findUserByDocument(document) ?: throw UserNotFoundException()
         userRepository.deleteById(userToDelete.id)
     }
 
-    fun validateTransaction(transactionDto: TransactionDto) {
-        val sender = userRepository.findUserByDocument(transactionDto.senderDocument) ?: throw Exception("User not found.")
-        val receiver = userRepository.findUserByDocument(transactionDto.receiverDocument) ?: throw Exception("User not found.")
+    fun validateTransaction(transactionDto: TransactionDto): ResponseTransactionDto {
+        val sender = userRepository.findUserByDocument(transactionDto.senderDocument) ?: throw UserNotFoundException()
+        val receiver = userRepository.findUserByDocument(transactionDto.receiverDocument) ?: throw UserNotFoundException()
 
         if (sender.balance < transactionDto.amount) {
-            throw Exception("Insufficient balance.")
+            throw InsufficientBalanceException()
         }
 
         realizeTransaction(sender, receiver, transactionDto.amount)
+
+        val response = ResponseTransactionDto(
+            senderName = sender.firstName,
+            senderDocument = sender.document,
+            receiverName = receiver.firstName,
+            receiverDocument = receiver.document,
+            amount = transactionDto.amount
+        )
+
+        return response
     }
 
     fun realizeTransaction(sender: UserModel, receiver: UserModel, amount: BigDecimal){
@@ -47,5 +59,9 @@ class UserService(
 
         userRepository.save(sender)
         userRepository.save(receiver)
+    }
+
+    fun findUserByDocument(document: String): UserModel {
+        return userRepository.findUserByDocument(document) ?: throw UserNotFoundException()
     }
 }
